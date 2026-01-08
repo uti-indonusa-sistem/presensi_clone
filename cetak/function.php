@@ -424,5 +424,3 @@ if($kelasAB==$pilihanKelas){
 	return"";
 }
 }
-
-?>

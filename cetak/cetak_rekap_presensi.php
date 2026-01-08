@@ -1,4 +1,6 @@
-<?php if($_COOKIE['simpreskul_admin']==''){header('Location: ../admin/login.php');}
+<?php 
+ob_start();
+if($_COOKIE['simpreskul_admin']==''){header('Location: ../admin/login.php');}
 set_time_limit(9000000000);
 include"../koneksi.php";
 include"function.php";
@@ -6,15 +8,16 @@ include"function.php";
 require_once "../mpdf_v8.0.3-master/vendor/autoload.php";
 $mpdf = new \Mpdf\Mpdf(['orientation' => 'L']);
 
-$sqlProdi=mysqli_query($connection,"SELECT xid_sms, nm_lemb FROM wsia_sms WHERE xid_sms='".$_POST['prodi']."'"); 
-$dataProdi=mysqli_fetch_array($sqlProdi);
-
-// Mulai capture output
-ob_start();
-
+if(empty($_POST['prodi']) || empty($_POST['tahun_akademik'])){
+    die("Error: Data Program Studi atau Tahun Akademik tidak dikirim.");
+}
 
 $sqlProdi=mysqli_query($connection,"SELECT xid_sms, nm_lemb FROM wsia_sms WHERE xid_sms='".$_POST['prodi']."'"); 
 $dataProdi=mysqli_fetch_array($sqlProdi);
+
+
+
+
 
 
 if (substr($_POST['tahun_akademik'],4,1)=='1'){
