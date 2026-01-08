@@ -60,11 +60,6 @@ $no = 1;
 $id_ptk_cookie = mysqli_real_escape_string($connection, $_COOKIE['simpreskul_id_ptk']);
 $id_smt_post = isset($_POST['tahun_akademik']) ? mysqli_real_escape_string($connection, $_POST['tahun_akademik']) : "";
 
-// Get distinct gabungan list
-$sqlGabungan = mysqli_query($connection, "SELECT DISTINCT p.id_gabungan, v.xid_kls, v.id_ptk, v.nm_mk, v.xid_mk FROM presensi_kelas_gabungan p
-	LEFT JOIN viewKelasKuliah v ON v.xid_kls = p.xid_kls
-	WHERE v.id_ptk='".$id_ptk_cookie."' AND v.id_smt='".$id_smt_post."'");
-
 // Preload all mataKuliah entries grouped by id_gabungan
 $groups = [];
 $sqlAll = mysqli_query($connection, "SELECT p.id_gabungan, v.* FROM presensi_kelas_gabungan p
@@ -74,22 +69,23 @@ while ($r = mysqli_fetch_array($sqlAll)) {
 	$groups[$r['id_gabungan']][] = $r;
 }
 
-while($dataGabungan=mysqli_fetch_array($sqlGabungan)){
+// Loop through each group exactly once
+foreach($groups as $idg => $dataGroup){
+	// Take the first element of the group for shared details like Subject Name
+	$dataGabungan = $dataGroup[0];
+	
 	echo"<tr><td>$no</td><td>$dataGabungan[nm_mk]</td>
 	<td>";
 	echo"<table border='0' width='100%'><tr><td width='35%'><b>Program Studi</td><td width='10%'><b>Kelas</td><td width='10%'><b>Semester</b></td><td></td></tr>";
 
-	$idg = $dataGabungan['id_gabungan'];
-	if (!empty($groups[$idg])) {
-		foreach ($groups[$idg] as $dataMataKuliah) {
-			echo"<tr><td>$dataMataKuliah[nm_lemb]</td><td>$dataMataKuliah[nm_kls]</td>
-			<td style='text-align:center'>".semester($connection,$dataMataKuliah['xid_mk'])."</td>
-			<td style='text-align:center'>
-			<a href='dosen_data_kehadiran-".str_replace("-","_yz_",$dataMataKuliah['xid_kls'])."-".str_replace("-","_yz_",$dataMataKuliah['id_ptk']).".html'>Presensi Mahasiswa</a>
-			<a href='http://www.cetaksimpreskul.poltekindonusa.ac.id/kehadiran_pdf.php?id_kelas=".str_replace("-","_yz_",$dataMataKuliah['xid_kls'])."&id_ptk=".str_replace("-","_yz_",$id_ptk_cookie)."'><img src='medicio/PDF-icon.png' width='20px'></a>
-			</td>
-			</tr>";
-		}
+	foreach ($dataGroup as $dataMataKuliah) {
+		echo"<tr><td>$dataMataKuliah[nm_lemb]</td><td>$dataMataKuliah[nm_kls]</td>
+		<td style='text-align:center'>".semester($connection,$dataMataKuliah['xid_mk'])."</td>
+		<td style='text-align:center'>
+		<a href='dosen_data_kehadiran-".str_replace("-","_yz_",$dataMataKuliah['xid_kls'])."-".str_replace("-","_yz_",$dataMataKuliah['id_ptk']).".html'>Presensi Mahasiswa</a>
+		<a href='http://www.cetaksimpreskul.poltekindonusa.ac.id/kehadiran_pdf.php?id_kelas=".str_replace("-","_yz_",$dataMataKuliah['xid_kls'])."&id_ptk=".str_replace("-","_yz_",$id_ptk_cookie)."'><img src='medicio/PDF-icon.png' width='20px'></a>
+		</td>
+		</tr>";
 	}
 
 	echo"</table>";
@@ -99,7 +95,7 @@ while($dataGabungan=mysqli_fetch_array($sqlGabungan)){
 	<a href='http://www.cetaksimpreskul.poltekindonusa.ac.id/jurnal_pdf.php?id_kelas=".str_replace("-","_yz_",$dataGabungan['xid_kls'])."&id_ptk=".str_replace("-","_yz_",$id_ptk_cookie)."'><img src='medicio/PDF-icon.png' width='20px'></a>                                        
 	</td>
 	</tr>";
-$no++;
+	$no++;
 
 }
 	
