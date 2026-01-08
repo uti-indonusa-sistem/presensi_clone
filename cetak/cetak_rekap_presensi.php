@@ -109,25 +109,29 @@ $sqlMahasiswa=mysqli_query($connection,"SELECT viewNilai.*,wsia_mahasiswa_pt.*,w
 											WHERE viewNilai.vid_kls='".str_replace("_yz_","-",$dataKelas['xid_kls'])."' ORDER BY wsia_mahasiswa_pt.nipd ASC
 											");
 
-// Load semua presensi mahasiswa untuk kelas ini sekaligus
-$ptk_list = array();
-for($i=1;$i<$urutan;$i++){
-	$ptk_list[] = "'".str_replace("_yz_","-",$id_ptk[$i])."'";
+// Load presensi data based on specific journals (meetings) for this class context
+// This fixes the issue where a student's entire history with a lecturer was being counted
+$all_jurnal_ids = array();
+foreach($allPertemuan as $jurnals){
+	foreach($jurnals as $jid){
+		$all_jurnal_ids[] = "'".$jid."'";
+	}
 }
 
-if(count($ptk_list) > 0){
-	$sqlAllPresensi = mysqli_query($connection,"SELECT presensi_rekap.nim, presensi_rekap.id_ptk, COUNT(*) as total_hadir 
-									FROM presensi_rekap 
-									WHERE presensi_rekap.id_ptk IN (".implode(",",$ptk_list).")
-									GROUP BY presensi_rekap.nim, presensi_rekap.id_ptk
-									");
-	$presensiByNimAndPtk = array();
-	while($row = mysqli_fetch_array($sqlAllPresensi)){
-		$key = $row['nim']."_".$row['id_ptk'];
-		$presensiByNimAndPtk[$key] = $row['total_hadir'];
+$start_attendance_map = []; // [id_jurnal][nim] = 1
+
+if(count($all_jurnal_ids) > 0){
+	// Chunked query to avoid max packet size or query length limits if too many journals
+	$chunks = array_chunk($all_jurnal_ids, 500);
+	
+	foreach($chunks as $chunk) {
+		$chunk_str = implode(",", $chunk);
+		$sqlAllPresensi = mysqli_query($connection,"SELECT nim, id_jurnal FROM presensi_rekap 
+										WHERE id_jurnal IN ($chunk_str)");
+		while($row = mysqli_fetch_array($sqlAllPresensi)){
+			$start_attendance_map[$row['id_jurnal']][$row['nim']] = 1;
+		}
 	}
-} else {
-	$presensiByNimAndPtk = array();
 }
 
 $no=1;		
@@ -135,9 +139,15 @@ while($dataMahasiswa=mysqli_fetch_array($sqlMahasiswa)){
 echo"<tr><td>$no</td><td>$dataMahasiswa[nipd]</td><td>$dataMahasiswa[nm_pd]</td>";
 $no++;
 for($q=1;$q<$urutan;$q++){
-	$ptk_key = str_replace("_yz_","-",$id_ptk[$q]);
-	$presKey = $dataMahasiswa['nipd']."_".$ptk_key;
-	$hadir = isset($presensiByNimAndPtk[$presKey]) ? $presensiByNimAndPtk[$presKey] : 0;
+	// Calculate specific presence for this subject
+	$hadir = 0;
+	if(isset($allPertemuan[$q])){
+		foreach($allPertemuan[$q] as $jid_check){
+			if(isset($start_attendance_map[$jid_check][$dataMahasiswa['nipd']])){
+				$hadir++;
+			}
+		}
+	}
 	
 	if(count($allPertemuan[$q])!=0){
 		$presentaseKehadiran=number_format((($hadir/count($allPertemuan[$q]))*100),2);
