@@ -1,0 +1,108 @@
+<IfModule mod_rewrite.c>
+RewriteEngine on
+
+RewriteRule ^$ /login_dosen.html [L,R=302]
+
+RewriteRule ^agenda-(.*)\.html$ media.php?module=detailagenda&id=$1 [L]
+RewriteRule ^index\.html$ media.php?module=index [L]
+RewriteRule ^halaman_utama\.html$ media.php?module=halaman_utama [L]
+RewriteRule ^proses_logout\.html$ media.php?module=proses_logout [L]
+RewriteRule ^beranda\.html$ media.php?module=beranda [L]
+RewriteRule ^proses_absen-(.*)\.html$ media.php?module=proses_absen&kode_rfid=$1 [L]
+RewriteRule ^proses_login_ruang\.html$ media.php?module=proses_login_ruang [L]
+RewriteRule ^proses_login_dosen\.html$ media.php?module=proses_login_dosen [L]
+RewriteRule ^proses_presensi_mahasiswa-(.*)\.html$ media.php?module=proses_presensi_mahasiswa&id_kelas=$1 [L]
+RewriteRule ^form_login_dosen\.html$ media.php?module=form_login_dosen [L]
+RewriteRule ^set_cookie-(.*)-(.*)\.html$ media.php?module=set_cookie&id_jenis=$1&jenis_login=$2 [L]
+RewriteRule ^form_login_ruang\.html$ media.php?module=form_login_ruang [L]
+RewriteRule ^presensi-(.*)\.html$ media.php?module=presensi&id_kelas=$1 [L]
+RewriteRule ^jurnal_perkuliahan-(.*)\.html$ media.php?module=jurnal_perkuliahan&id_kelas=$1 [L]
+RewriteRule ^presensi_perkuliahan\.html$ media.php?module=presensi_perkuliahan [L]
+RewriteRule ^proses_simpan_materi-(.*)-(.*)\.html$ media.php?module=proses_simpan_materi&id_kelas=$1&pertemuan_ke=$2 [L]
+RewriteRule ^data_kehadiran-(.*)-(.*)-(.*)-(.*)\.html$ media.php?module=data_kehadiran&id_kelas=$1&prodi=$2&kelas=$3&matkul=$4 [L]
+RewriteRule ^input_kehadiran-(.*)-(.*)-(.*)-(.*)-(.*)-(.*)-(.*)\.html$ media.php?module=input_kehadiran&nim=$1&matkul=$2&pertemuan_ke=$3&id_jurnal=$4&id_kelas=$5&prodi=$6&kelas=$7 [L]
+RewriteRule ^input_kehadiran_all-(.*)-(.*)-(.*)-(.*)-(.*)-(.*)-(.*)\.html$ media.php?module=input_kehadiran_all&matkul=$1&pertemuan_ke=$2&id_jurnal=$3&id_kelas=$4&prodi=$5&kelas=$6&status=$7 [L]
+
+
+RewriteRule ^login_admin\.html$ admin/login.php [L]
+
+
+RewriteRule ^kaprodi\.html$ kaprodi.php?module=kaprodi [L]
+RewriteRule ^login_kaprodi\.html$ kaprodi/login.php [L]
+RewriteRule ^kaprodi_proses_login\.html$ kaprodi/kaprodi_proses_login.php [L]
+RewriteRule ^kaprodi\.html$ kaprodi.php?module=kaprodi [L]
+RewriteRule ^kaprodi_rekap_presensi\.html$ kaprodi.php?module=kaprodi_rekap_presensi [L]
+RewriteRule ^cetak_rekap_presensi\.html$ cetak/cetak_rekap_presensi.php [L]
+RewriteRule ^cetak_rekap_kehadiran\.html$ cetak/cetak_rekap_kehadiran.php [L]
+RewriteRule ^kaprodi_form_rekap_presentase_kehadiran\.html$ kaprodi.php?module=kaprodi_form_rekap_presentase_kehadiran [L]
+RewriteRule ^kaprodi_form_rekap_jurnal\.html$ kaprodi.php?module=kaprodi_form_rekap_jurnal [L]
+RewriteRule ^kaprodi_form_data_kehadiran\.html$ kaprodi.php?module=kaprodi_form_data_kehadiran [L]
+RewriteRule ^kaprodi_form_daftar_mahasiswa\.html$ kaprodi.php?module=kaprodi_form_daftar_mahasiswa [L]
+
+
+RewriteRule ^kaprodi_khs-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_khs&nipd=$1&id_smt=$2 [L]
+RewriteRule ^kaprodi_data_kehadiran-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_data_kehadiran&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^kaprodi_daftar_mahasiswa-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_daftar_mahasiswa&tahun_angkatan=$1&kelas=$2 [L]
+RewriteRule ^kaprodi_jurnal_perkuliahan-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_jurnal_perkuliahan&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^kaprodi_proses_simpan_materi-(.*)-(.*)-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_proses_simpan_materi&id_kelas=$1&id_ptk=$2&pertemuan_ke=$3&id_jurnal=$4 [L]
+RewriteRule ^kaprodi_proses_login\.html$ kaprodi/kaprodi_proses_login.php [L]
+RewriteRule ^cetak_rekap_jurnal\.html$ cetak/cetak_rekap_jurnal.php [L]
+RewriteRule ^kaprodi_input_kehadiran-(.*)-(.*)\.html$ kaprodi.php?module=kaprodi_input_kehadiran&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^kaprodi_form_rekap_kehadiran\.html$ kaprodi.php?module=kaprodi_form_rekap_kehadiran [L]
+
+
+
+
+RewriteRule ^admin\.html$ admin.php?module=admin [L]
+RewriteRule ^admin_rekap_presensi\.html$ admin.php?module=admin_rekap_presensi [L]
+RewriteRule ^cetak_rekap_presensi\.html$ cetak/cetak_rekap_presensi.php [L]
+RewriteRule ^cetak_rekap_kehadiran\.html$ cetak/cetak_rekap_kehadiran.php [L]
+RewriteRule ^admin_form_rekap_presentase_kehadiran\.html$ admin.php?module=admin_form_rekap_presentase_kehadiran [L]
+RewriteRule ^admin_form_rekap_jurnal\.html$ admin.php?module=admin_form_rekap_jurnal [L]
+RewriteRule ^admin_form_data_kehadiran\.html$ admin.php?module=admin_form_data_kehadiran [L]
+RewriteRule ^admin_form_data_monitoring\.html$ admin.php?module=admin_form_data_monitoring [L]
+RewriteRule ^admin_data_kehadiran-(.*)-(.*)\.html$ admin.php?module=admin_data_kehadiran&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^admin_jurnal_perkuliahan-(.*)-(.*)\.html$ admin.php?module=admin_jurnal_perkuliahan&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^admin_proses_simpan_materi-(.*)-(.*)-(.*)-(.*)\.html$ admin.php?module=admin_proses_simpan_materi&id_kelas=$1&id_ptk=$2&pertemuan_ke=$3&id_jurnal=$4 [L]
+RewriteRule ^admin_proses_login\.html$ admin/admin_proses_login.php [L]
+RewriteRule ^cetak_rekap_jurnal\.html$ cetak/cetak_rekap_jurnal.php [L]
+RewriteRule ^admin_input_kehadiran-(.*)-(.*)\.html$ admin.php?module=admin_input_kehadiran&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^admin_form_rekap_kehadiran\.html$ admin.php?module=admin_form_rekap_kehadiran [L]
+
+RewriteRule ^dosen\.html$ dosen.php?module=dosen [L]
+RewriteRule ^dosen_form_bukti_pembelajaran-(.*)\.html$ dosen.php?module=dosen_form_bukti_pembelajaran&id_jurnal=$1 [L]
+RewriteRule ^dosen_rekap_presensi\.html$ dosen.php?module=dosen_rekap_presensi [L]
+RewriteRule ^cetak_rekap_presensi\.html$ cetak/cetak_rekap_presensi.php [L]
+RewriteRule ^dosen_form_rekap_presentase_kehadiran\.html$ dosen.php?module=dosen_form_rekap_presentase_kehadiran [L]
+
+RewriteRule ^dosen_form_data_kehadiran\.html$ dosen.php?module=dosen_form_data_kehadiran [L]
+RewriteRule ^dosen_input_kehadiran2-(.*)-(.*)\.html$ dosen.php?module=dosen_input_kehadiran2&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^dosen_data_kehadiran-(.*)-(.*)\.html$ dosen.php?module=dosen_data_kehadiran&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^dosen_jurnal_perkuliahan-(.*)-(.*)\.html$ dosen.php?module=dosen_jurnal_perkuliahan&id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^dosen_proses_simpan_materi-(.*)-(.*)-(.*)-(.*)\.html$ dosen.php?module=dosen_proses_simpan_materi&id_kelas=$1&id_ptk=$2&pertemuan_ke=$3&id_jurnal=$4 [L]
+RewriteRule ^dosen_hapus_jurnal-(.*)-(.*)-(.*)\.html$ dosen.php?module=dosen_hapus_jurnal&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
+RewriteRule ^admin_hapus_jurnal-(.*)-(.*)-(.*)\.html$ admin.php?module=admin_hapus_jurnal&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
+
+RewriteRule ^dosen_form_2_data_kehadiran\.html$ dosen.php?module=dosen_form_2_data_kehadiran [L]
+RewriteRule ^cetak_dosen_data_kehadiran-(.*)-(.*)\.html$ cetak/kehadiran_pdf.php?id_kelas=$1&id_ptk=$2 [L]
+RewriteRule ^cetak_dosen_jurnal_perkuliahan-(.*)\.html$ cetak/jurnal_pdf.php?id_kelas=$1 [L]
+RewriteRule ^dosen_konfirm-(.*)-(.*)-(.*)\.html$ dosen.php?module=dosen_konfirm&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
+RewriteRule ^admin_konfirm-(.*)-(.*)-(.*)\.html$ admin.php?module=admin_konfirm&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
+RewriteRule ^warning-(.*)\.html$ dosen.php?module=warning&id_kelas=$1 [L]
+
+
+
+RewriteRule ^login_dosen\.html$ dosen/login.php [L]
+RewriteRule ^dosen_proses_login\.html$ dosen/dosen_proses_login.php [L]
+
+
+
+Options All -Indexes
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php82” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

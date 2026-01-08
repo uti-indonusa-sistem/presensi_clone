@@ -1,0 +1,1 @@
+<?php if($_COOKIE['simpreskul_nik']==''){header("Location:login_dosen.html");} ?>

@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c">
+RewriteEngine On
+
+# Block direct access to all PHP files except login.php and admin_proses_login.php
+RewriteCond %{REQUEST_FILENAME} \.php$
+RewriteCond %{REQUEST_FILENAME} !login\.php$
+RewriteCond %{REQUEST_FILENAME} !admin_proses_login\.php$
+RewriteCond %{REQUEST_FILENAME} !admin_proses_simpan_materi\.php$
+RewriteCond %{REQUEST_FILENAME} !admin_konfirm\.php$
+RewriteCond %{REQUEST_FILENAME} !admin_hapus_jurnal\.php$
+RewriteCond %{REQUEST_FILENAME} !logout\.php$
+RewriteRule ^(.*)$ - [F,L]
+
+# Allow index.php to handle all requests
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# Disable directory listing
+Options -Indexes
