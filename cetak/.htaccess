@@ -1,8 +1,9 @@
-<IfModule mod_rewrite.c">
+<IfModule mod_rewrite.c>
 RewriteEngine On
 
-# Block direct access to all PHP files
-RewriteCond %{REQUEST_FILENAME} \.php$
+# Allow access to cetak PHP files (they have their own cookie authentication)
+# Block only function.php which should not be accessed directly
+RewriteCond %{REQUEST_FILENAME} function\.php$
 RewriteRule ^(.*)$ - [F,L]
 </IfModule>
 

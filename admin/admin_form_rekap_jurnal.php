@@ -1,9 +1,14 @@
-<?php if($_COOKIE['simpreskul_admin']==''){header('Location: ' . $base_url . '/admin/login.php');} ?>
-<div style="float:left; width:100%;" >
-		<form action="cetak_rekap_jurnal.html" method=POST>
+<?php
+require_once __DIR__ . '/../koneksi.php';
+require_once __DIR__ . '/../config/Security.php';
+requireAdmin();
+?>
+<div style="float:left; width:100%;">
+	<form action="<?php echo $base_url; ?>/cetak_rekap_jurnal.html" method="POST" target="_blank">
 		<table class="table table-striped table-bordered table-hover" id="dataTables-example" style="width:100%;">
-		
-			<td><b>Bulan</b></td><td>
+
+			<td><b>Bulan</b></td>
+			<td>
 				<select name="bulan" class="form-control" style="width:150px;">
 					<option value="2019-07">Juli 2019</option>
 					<option value="2019-08">Agustus 2019</option>
@@ -25,15 +30,15 @@
 					<option value="2020-12">Desember 2020</option>
 				</select>
 			</td>
-			
-		</tr>
-		<tr>
-			<td colspan="2"><input type="submit" value="Cetak" class="btn btn-default"></td>
-		</tr>
-		
-		<tr>
-		
-		
-		
-		</form>
-	</div>
+
+			</tr>
+			<tr>
+				<td colspan="2"><input type="submit" value="Cetak" class="btn btn-default"></td>
+			</tr>
+
+			<tr>
+
+
+
+	</form>
+</div>

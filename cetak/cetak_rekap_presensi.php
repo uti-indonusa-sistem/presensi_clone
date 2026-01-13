@@ -1,185 +1,189 @@
-<?php 
+<?php
 ob_start();
-if($_COOKIE['simpreskul_admin']==''){header('Location: ../admin/login.php');}
+// Allow access for admin, dosen, or kaprodi
+if (empty($_COOKIE['simpreskul_admin']) && empty($_COOKIE['simpreskul_id_ptk']) && empty($_COOKIE['simpreskul_id_prodi'])) {
+	header('Location: ../admin/login.php');
+	exit;
+}
 set_time_limit(9000000000);
-include"../koneksi.php";
-include"function.php";
+include_once "../koneksi.php";
+include_once "function.php";
 
 require_once "../mpdf_v8.0.3-master/vendor/autoload.php";
 $mpdf = new \Mpdf\Mpdf(['orientation' => 'L']);
 
-if(empty($_POST['prodi']) || empty($_POST['tahun_akademik'])){
-    die("Error: Data Program Studi atau Tahun Akademik tidak dikirim.");
+if (empty($_POST['prodi']) || empty($_POST['tahun_akademik'])) {
+	die("Error: Data Program Studi atau Tahun Akademik tidak dikirim.");
 }
 
-$sqlProdi=mysqli_query($connection,"SELECT xid_sms, nm_lemb FROM wsia_sms WHERE xid_sms='".$_POST['prodi']."'"); 
-$dataProdi=mysqli_fetch_array($sqlProdi);
+$sqlProdi = mysqli_query($connection, "SELECT xid_sms, nm_lemb FROM wsia_sms WHERE xid_sms='" . $_POST['prodi'] . "'");
+$dataProdi = mysqli_fetch_array($sqlProdi);
 
 
 
 
 
 
-if (substr($_POST['tahun_akademik'],4,1)=='1'){
-	$dataSemester="GANJIL";
-}else if (substr($_POST['tahun_akademik'],4,1)=='2'){
-	$dataSemester="GENAP";
+if (substr($_POST['tahun_akademik'], 4, 1) == '1') {
+	$dataSemester = "GANJIL";
+} else if (substr($_POST['tahun_akademik'], 4, 1) == '2') {
+	$dataSemester = "GENAP";
 }
 
 
-echo"<br><table>
+echo "<br><table>
 <tr><td colspan='13'><center>REKAPITULASI PRESENSI MAHASISWA</center></td></tr>
-<tr><td colspan='13'><center>PROGRAM STUDI ".strtoupper($dataProdi['nm_lemb'])."</center></td></tr>
-<tr><td colspan='13'><center>SEMESTER $dataSemester TAHUN AKADEMIK ".substr($_POST['tahun_akademik'],0,4)."/".(substr($_POST['tahun_akademik'],0,4)+1)."</center></td></tr>
+<tr><td colspan='13'><center>PROGRAM STUDI " . strtoupper($dataProdi['nm_lemb']) . "</center></td></tr>
+<tr><td colspan='13'><center>SEMESTER $dataSemester TAHUN AKADEMIK " . substr($_POST['tahun_akademik'], 0, 4) . "/" . (substr($_POST['tahun_akademik'], 0, 4) + 1) . "</center></td></tr>
 </table><br>";
 
-$sqlKelas=mysqli_query($connection,"SELECT viewKelasKuliah.*,wsia_mata_kuliah_kurikulum.* FROM viewKelasKuliah 
+$sqlKelas = mysqli_query($connection, "SELECT viewKelasKuliah.*,wsia_mata_kuliah_kurikulum.* FROM viewKelasKuliah 
 LEFT JOIN wsia_mata_kuliah_kurikulum ON viewKelasKuliah.xid_mk=wsia_mata_kuliah_kurikulum.id_mk
-WHERE viewKelasKuliah.id_sms='".$_POST['prodi']."' AND viewKelasKuliah.id_smt='".$_POST['tahun_akademik']."'
+WHERE viewKelasKuliah.id_sms='" . $_POST['prodi'] . "' AND viewKelasKuliah.id_smt='" . $_POST['tahun_akademik'] . "'
 GROUP BY viewKelasKuliah.nm_kls
 ");
 
-while($dataKelas=mysqli_fetch_array($sqlKelas)){
-$sqlPA=mysqli_query($connection,"SELECT wsia_dosen.nm_ptk FROM wsia_mahasiswa_pt 
-LEFT JOIN wsia_dosen ON wsia_mahasiswa_pt.pa=wsia_dosen.xid_ptk WHERE wsia_mahasiswa_pt.id_sms='".$_POST['prodi']."' AND wsia_mahasiswa_pt.kelas='".$dataKelas['nm_kls']."'
+while ($dataKelas = mysqli_fetch_array($sqlKelas)) {
+	$sqlPA = mysqli_query($connection, "SELECT wsia_dosen.nm_ptk FROM wsia_mahasiswa_pt 
+LEFT JOIN wsia_dosen ON wsia_mahasiswa_pt.pa=wsia_dosen.xid_ptk WHERE wsia_mahasiswa_pt.id_sms='" . $_POST['prodi'] . "' AND wsia_mahasiswa_pt.kelas='" . $dataKelas['nm_kls'] . "'
 ");
-$dataPA=mysqli_fetch_array($sqlPA);
+	$dataPA = mysqli_fetch_array($sqlPA);
 
-echo"<table>
+	echo "<table>
 <tr><td colspan='2'>Semester</td><td>: $dataKelas[smt]</td></tr>
 <tr><td colspan='2'>Kelas</td><td>: $dataKelas[nm_kls]</td></tr>
 <tr><td colspan='2'>Pembimbing Akademik</td><td>: $dataPA[nm_ptk]</td></tr>
 
 </table>";
 
-$sqlMataKuliah=mysqli_query($connection,"SELECT viewKelasKuliah.*, wsia_dosen.nm_ptk FROM viewKelasKuliah 
+	$sqlMataKuliah = mysqli_query($connection, "SELECT viewKelasKuliah.*, wsia_dosen.nm_ptk FROM viewKelasKuliah 
 LEFT JOIN wsia_dosen ON viewKelasKuliah.id_ptk=wsia_dosen.xid_ptk
-WHERE viewKelasKuliah.id_sms='".$_POST['prodi']."' AND viewKelasKuliah.id_smt='".$_POST['tahun_akademik']."' AND nm_kls='".$dataKelas['nm_kls']."'
+WHERE viewKelasKuliah.id_sms='" . $_POST['prodi'] . "' AND viewKelasKuliah.id_smt='" . $_POST['tahun_akademik'] . "' AND nm_kls='" . $dataKelas['nm_kls'] . "'
 
 ");
 
-// Cache untuk matakuliah data
-$mataKuliahData = array();
-$dosen = array();
-$makul = array();
-$xid_kls = array();
-$id_ptk = array();
-$jumlahPertemuan = array();
-$kode = "A";
-$urutan = 1;
+	// Cache untuk matakuliah data
+	$mataKuliahData = array();
+	$dosen = array();
+	$makul = array();
+	$xid_kls = array();
+	$id_ptk = array();
+	$jumlahPertemuan = array();
+	$kode = "A";
+	$urutan = 1;
 
-while($dataMataKuliah=mysqli_fetch_array($sqlMataKuliah)){
-	$dosen[$urutan]=$dataMataKuliah['nm_ptk'];
-	$makul[$urutan]=$dataMataKuliah['nm_mk'];
-	$xid_kls[$urutan]=$dataMataKuliah['xid_kls'];
-	$id_ptk[$urutan]=$dataMataKuliah['id_ptk'];
-	
-	// Pre-calculate jumlah pertemuan
-	$jumlahPertemuan[$urutan]=hitung_jumlah_pertemuan($dataMataKuliah['xid_kls'],$dataMataKuliah['id_ptk']);
-	$urutan++;
-}
+	while ($dataMataKuliah = mysqli_fetch_array($sqlMataKuliah)) {
+		$dosen[$urutan] = $dataMataKuliah['nm_ptk'];
+		$makul[$urutan] = $dataMataKuliah['nm_mk'];
+		$xid_kls[$urutan] = $dataMataKuliah['xid_kls'];
+		$id_ptk[$urutan] = $dataMataKuliah['id_ptk'];
 
-// Query semua presensi sekali (batch loading)
-$allPresensiData = array();
-$allPertemuan = array();
-for($i=1;$i<$urutan;$i++){
-	$sqlAllPertemuan=mysqli_query($connection,"SELECT id_jurnal FROM presensi_jurnal_perkuliahan WHERE ".cek_gabungan($xid_kls[$i])."
-	AND id_ptk='".str_replace("_yz_","-",$id_ptk[$i])."'");
-	$allPertemuan[$i] = array();
-	while($row = mysqli_fetch_array($sqlAllPertemuan)){
-		$allPertemuan[$i][] = $row['id_jurnal'];
+		// Pre-calculate jumlah pertemuan
+		$jumlahPertemuan[$urutan] = hitung_jumlah_pertemuan($dataMataKuliah['xid_kls'], $dataMataKuliah['id_ptk']);
+		$urutan++;
 	}
-}
 
-echo"<br><table border='1' style='border-collapse:collapse;'>
-<tr><td rowspan='2'><center>No</center></td><td rowspan='2'><center>NIM</center></td><td rowspan='2'><center>Nama Mahasiswa</center></td>";
-for($q=1;$q<$urutan;$q++){
-echo"<td style='width:60px' width='60px'><center>".chr(64+$q)."</center></td>";
-}
-echo"</tr>";
-echo"<tr>";
-for($q=1;$q<$urutan;$q++){
-echo"<td><center>".$jumlahPertemuan[$q]."X</center></td>";
-}
-echo"</tr>";
-
-$sqlMahasiswa=mysqli_query($connection,"SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
-											RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
-											LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-											WHERE viewNilai.vid_kls='".str_replace("_yz_","-",$dataKelas['xid_kls'])."' ORDER BY wsia_mahasiswa_pt.nipd ASC
-											");
-
-// Load presensi data based on specific journals (meetings) for this class context
-// This fixes the issue where a student's entire history with a lecturer was being counted
-$all_jurnal_ids = array();
-foreach($allPertemuan as $jurnals){
-	foreach($jurnals as $jid){
-		$all_jurnal_ids[] = "'".$jid."'";
-	}
-}
-
-$start_attendance_map = []; // [id_jurnal][nim] = 1
-
-if(count($all_jurnal_ids) > 0){
-	// Chunked query to avoid max packet size or query length limits if too many journals
-	$chunks = array_chunk($all_jurnal_ids, 500);
-	
-	foreach($chunks as $chunk) {
-		$chunk_str = implode(",", $chunk);
-		$sqlAllPresensi = mysqli_query($connection,"SELECT nim, id_jurnal FROM presensi_rekap 
-										WHERE id_jurnal IN ($chunk_str)");
-		while($row = mysqli_fetch_array($sqlAllPresensi)){
-			$start_attendance_map[$row['id_jurnal']][$row['nim']] = 1;
+	// Query semua presensi sekali (batch loading)
+	$allPresensiData = array();
+	$allPertemuan = array();
+	for ($i = 1; $i < $urutan; $i++) {
+		$sqlAllPertemuan = mysqli_query($connection, "SELECT id_jurnal FROM presensi_jurnal_perkuliahan WHERE " . cek_gabungan($xid_kls[$i]) . "
+	AND id_ptk='" . str_replace("_yz_", "-", $id_ptk[$i]) . "'");
+		$allPertemuan[$i] = array();
+		while ($row = mysqli_fetch_array($sqlAllPertemuan)) {
+			$allPertemuan[$i][] = $row['id_jurnal'];
 		}
 	}
-}
 
-$no=1;		
-while($dataMahasiswa=mysqli_fetch_array($sqlMahasiswa)){
-echo"<tr><td>$no</td><td>$dataMahasiswa[nipd]</td><td>$dataMahasiswa[nm_pd]</td>";
-$no++;
-for($q=1;$q<$urutan;$q++){
-	// Calculate specific presence for this subject
-	$hadir = 0;
-	if(isset($allPertemuan[$q])){
-		foreach($allPertemuan[$q] as $jid_check){
-			if(isset($start_attendance_map[$jid_check][$dataMahasiswa['nipd']])){
-				$hadir++;
+	echo "<br><table border='1' style='border-collapse:collapse;'>
+<tr><td rowspan='2'><center>No</center></td><td rowspan='2'><center>NIM</center></td><td rowspan='2'><center>Nama Mahasiswa</center></td>";
+	for ($q = 1; $q < $urutan; $q++) {
+		echo "<td style='width:60px' width='60px'><center>" . chr(64 + $q) . "</center></td>";
+	}
+	echo "</tr>";
+	echo "<tr>";
+	for ($q = 1; $q < $urutan; $q++) {
+		echo "<td><center>" . $jumlahPertemuan[$q] . "X</center></td>";
+	}
+	echo "</tr>";
+
+	$sqlMahasiswa = mysqli_query($connection, "SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
+											RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
+											LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
+											WHERE viewNilai.vid_kls='" . str_replace("_yz_", "-", $dataKelas['xid_kls']) . "' ORDER BY wsia_mahasiswa_pt.nipd ASC
+											");
+
+	// Load presensi data based on specific journals (meetings) for this class context
+// This fixes the issue where a student's entire history with a lecturer was being counted
+	$all_jurnal_ids = array();
+	foreach ($allPertemuan as $jurnals) {
+		foreach ($jurnals as $jid) {
+			$all_jurnal_ids[] = "'" . $jid . "'";
+		}
+	}
+
+	$start_attendance_map = []; // [id_jurnal][nim] = 1
+
+	if (count($all_jurnal_ids) > 0) {
+		// Chunked query to avoid max packet size or query length limits if too many journals
+		$chunks = array_chunk($all_jurnal_ids, 500);
+
+		foreach ($chunks as $chunk) {
+			$chunk_str = implode(",", $chunk);
+			$sqlAllPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap 
+										WHERE id_jurnal IN ($chunk_str)");
+			while ($row = mysqli_fetch_array($sqlAllPresensi)) {
+				$start_attendance_map[$row['id_jurnal']][$row['nim']] = 1;
 			}
 		}
 	}
-	
-	if(count($allPertemuan[$q])!=0){
-		$presentaseKehadiran=number_format((($hadir/count($allPertemuan[$q]))*100),2);
-		$data=explode(".",$presentaseKehadiran);
-		if (substr($data[1],0,2)=='00'){
-			$desimal="<font color='white'>_</font>";
-		}else{
-			$desimal=".".$data[1]."<font color='white'>_</font>";
+
+	$no = 1;
+	while ($dataMahasiswa = mysqli_fetch_array($sqlMahasiswa)) {
+		echo "<tr><td>$no</td><td>$dataMahasiswa[nipd]</td><td>$dataMahasiswa[nm_pd]</td>";
+		$no++;
+		for ($q = 1; $q < $urutan; $q++) {
+			// Calculate specific presence for this subject
+			$hadir = 0;
+			if (isset($allPertemuan[$q])) {
+				foreach ($allPertemuan[$q] as $jid_check) {
+					if (isset($start_attendance_map[$jid_check][$dataMahasiswa['nipd']])) {
+						$hadir++;
+					}
+				}
+			}
+
+			if (count($allPertemuan[$q]) != 0) {
+				$presentaseKehadiran = number_format((($hadir / count($allPertemuan[$q])) * 100), 2);
+				$data = explode(".", $presentaseKehadiran);
+				if (substr($data[1], 0, 2) == '00') {
+					$desimal = "<font color='white'>_</font>";
+				} else {
+					$desimal = "." . $data[1] . "<font color='white'>_</font>";
+				}
+				echo "<td>" . $data[0] . $desimal . "</td>";
+			} else {
+				echo "<td></td>";
+			}
 		}
-		echo"<td>".$data[0].$desimal."</td>";
-	}else{
-		echo"<td></td>";
+
+		echo "</tr>";
+
+
 	}
-}
 
-echo"</tr>";
-
-
-}
-
-echo"</table>";
+	echo "</table>";
 
 
-echo"<br><table border='1' style='border-collapse:collapse;'>
+	echo "<br><table border='1' style='border-collapse:collapse;'>
 <tr><td><center>Kode</td><td colspan='2'><center>Dosen</td><td colspan='5'><center>Matakuliah</td></tr>
 ";
-$t="A";
-for($q=1;$q<$urutan;$q++){
-echo"<tr><td><center>$t</center></td><td colspan='2'>$dosen[$q]</td><td colspan='5'>$makul[$q]</td></tr>";
-$t++;
-}
-echo"</table><br>";
+	$t = "A";
+	for ($q = 1; $q < $urutan; $q++) {
+		echo "<tr><td><center>$t</center></td><td colspan='2'>$dosen[$q]</td><td colspan='5'>$makul[$q]</td></tr>";
+		$t++;
+	}
+	echo "</table><br>";
 }
 
 // Get HTML from buffer
@@ -198,7 +202,7 @@ td { padding: 4px; }
 $mpdf->WriteHTML($css . $html);
 
 // Output PDF
-$filename = 'Rekapitulasi_Presensi_'.$dataProdi['nm_lemb'].'_'.date('Y-m-d').'.pdf';
+$filename = 'Rekapitulasi_Presensi_' . $dataProdi['nm_lemb'] . '_' . date('Y-m-d') . '.pdf';
 $filename = preg_replace('/[^a-zA-Z0-9._\-]/', '_', $filename);
 $mpdf->Output($filename, 'D');
 exit;
