@@ -1,4 +1,5 @@
 <?php 
+require_once __DIR__ . '/../koneksi.php';
 if(($_COOKIE['simpreskul_nik']=='') AND ($_COOKIE['simpreskul_admin']=='')){header("Location:login_dosen.html");} ?>
 
 
