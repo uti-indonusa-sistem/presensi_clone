@@ -83,11 +83,20 @@ if(($_COOKIE['simpreskul_nik']=='') AND ($_COOKIE['simpreskul_admin']=='')){head
                                         </thead>
                                         <tbody>
                                         <?php
-										$sql=mysqli_query($connection,"SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
-											RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
-											LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-											WHERE viewNilai.vid_kls='".str_replace("_yz_","-",$_GET['id_kelas'])."' ORDER BY wsia_mahasiswa_pt.nipd ASC
-											");
+										// Query robust: Langsung ambil dari tabel mahasiswa_pt tanpa viewNilai yang bermasalah/bikin filter implisit
+										$id_kls_clean = str_replace("_yz_","-",$_GET['id_kelas']);
+										$queryMhs = "SELECT wsia_mahasiswa_pt.*, wsia_mahasiswa.nm_pd 
+													FROM wsia_mahasiswa_pt
+													LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
+													WHERE wsia_mahasiswa_pt.xid_kls='$id_kls_clean' 
+													ORDER BY wsia_mahasiswa_pt.nipd ASC";
+													
+										$sql=mysqli_query($connection, $queryMhs);
+										
+										// Error handling output jika query gagal (untuk debugging di production jika perlu)
+										if(!$sql) {
+											echo "<tr><td colspan='100%'>Error Query: ".mysqli_error($connection)." - ID KELAS: $id_kls_clean</td></tr>";
+										}
 											
 																				
 											$no=0;

@@ -10,10 +10,9 @@ if ($_COOKIE['simpreskul_admin'] == '') {
 if (isset($_POST['simpan_presensi'])) {
 
 
-	$sqlMahasiswa = mysqli_query($connection, "SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
-											RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
+	$sqlMahasiswa = mysqli_query($connection, "SELECT wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM wsia_mahasiswa_pt
 											LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-											WHERE viewNilai.vid_kls='" . str_replace("_yz_", "-", $_GET['id_kelas']) . "' ORDER BY wsia_mahasiswa_pt.nipd ASC
+											WHERE wsia_mahasiswa_pt.xid_kls='" . str_replace("_yz_", "-", $_GET['id_kelas']) . "' ORDER BY wsia_mahasiswa_pt.nipd ASC
 											");
 
 	$no = 0;

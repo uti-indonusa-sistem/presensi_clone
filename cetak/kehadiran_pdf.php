@@ -86,11 +86,11 @@ if (count($jurnalIds) > 0) {
 }
 
 // Get students from the class
-$sqlMahasiswa = mysqli_query($connection, "SELECT viewNilai.*, wsia_mahasiswa_pt.*, wsia_mahasiswa.nm_pd 
-    FROM viewNilai 
-    RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
+// Get students from the class
+$sqlMahasiswa = mysqli_query($connection, "SELECT wsia_mahasiswa_pt.*, wsia_mahasiswa.nm_pd 
+    FROM wsia_mahasiswa_pt
     LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-    WHERE viewNilai.vid_kls='" . $id_kelas . "' 
+    WHERE wsia_mahasiswa_pt.xid_kls='" . $id_kelas . "' 
     ORDER BY wsia_mahasiswa_pt.nipd ASC");
 
 // Build table header
