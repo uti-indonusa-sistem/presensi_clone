@@ -92,14 +92,34 @@ if(($_COOKIE['simpreskul_nik']=='') AND ($_COOKIE['simpreskul_admin']=='')){head
 													ORDER BY wsia_mahasiswa_pt.nipd ASC";
 													
 										$sql=mysqli_query($connection, $queryMhs);
+
+										// --- DEBUG BLOCK START ---
+										echo "<tr><td colspan='100%' style='background-color: #ffeebc; padding: 10px; text-align: left;'>";
+										echo "<strong>[DEBUG INFO]</strong><br>";
+										echo "<strong>GET ID Kelas:</strong> " . htmlspecialchars($_GET['id_kelas']) . "<br>";
+										echo "<strong>Processed ID Kelas:</strong> " . htmlspecialchars($id_kls_clean) . "<br>";
+										echo "<strong>Connection Status:</strong> " . ($connection ? "Connected" : "FAILED") . "<br>";
+										echo "<strong>Query SQL:</strong> " . htmlspecialchars($queryMhs) . "<br>";
 										
-										// Error handling output jika query gagal (untuk debugging di production jika perlu)
 										if(!$sql) {
-											echo "<tr><td colspan='100%'>Error Query: ".mysqli_error($connection)." - ID KELAS: $id_kls_clean</td></tr>";
+											echo "<strong>Query Error:</strong> " . mysqli_error($connection) . "<br>";
+										} else {
+											$rowCount = mysqli_num_rows($sql);
+											echo "<strong>Rows Found:</strong> " . $rowCount . "<br>";
+											if ($rowCount == 0) echo "<strong>WARNING:</strong> Tidak ada mahasiswa ditemukan dengan ID Kelas tersebut di tabel wsia_mahasiswa_pt.<br>";
+										}
+										echo "</td></tr>";
+										// --- DEBUG BLOCK END ---
+										
+										if(!$sql) {
+											// Error handling handled in debug block above
 										}
 											
 																				
 											$no=0;
+											// Reset pointer if we used num_rows (though num_rows doesn't advance pointer, better safe)
+											if($sql) mysqli_data_seek($sql, 0); 
+											
 											while($data=mysqli_fetch_array($sql)){
 										
 										
