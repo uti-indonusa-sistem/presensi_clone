@@ -108,9 +108,12 @@ WHERE viewKelasKuliah.id_sms='" . $_POST['prodi'] . "' AND viewKelasKuliah.id_sm
 	echo "</tr>";
 
 
+	// Use id_sms and nm_kls to get all students in the class, not just those in a specific subject ID
+	// this fixes the issue where only one name appeared in the report
 	$sqlMahasiswa = mysqli_query($connection, "SELECT wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM wsia_mahasiswa_pt
 							LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-							WHERE wsia_mahasiswa_pt.xid_kls='" . str_replace("_yz_", "-", $dataKelas['xid_kls']) . "' ORDER BY wsia_mahasiswa_pt.nipd ASC
+							WHERE wsia_mahasiswa_pt.id_sms='" . $_POST['prodi'] . "' AND wsia_mahasiswa_pt.kelas='" . $dataKelas['nm_kls'] . "' 
+							ORDER BY wsia_mahasiswa_pt.nipd ASC
 							");
 
 	// Load presensi data based on specific journals (meetings) for this class context
