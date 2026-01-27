@@ -82,16 +82,20 @@ if (count($jurnalIds) > 0) {
     $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . implode(",", $jurnalIds) . ")");
     while ($row = mysqli_fetch_array($sqlPresensi)) {
         $attendanceMap[$row['id_jurnal']][$row['nim']] = 1;
+        // Also support int-like matching
+        $nimInt = (string) intval($row['nim']);
+        if ($nimInt !== $row['nim']) {
+            $attendanceMap[$row['id_jurnal']][$nimInt] = 1;
+        }
     }
 }
 
-// Get students from the class
-// Get students from the class
-$sqlMahasiswa = mysqli_query($connection, "SELECT wsia_mahasiswa_pt.*, wsia_mahasiswa.nm_pd 
-    FROM wsia_mahasiswa_pt
+// Get Students - Strict Dosen Logic (viewNilai + RIGHT JOIN)
+// This ensures the PDF matches the screen exactly
+$sqlMahasiswa = mysqli_query($connection, "SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
+    RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
     LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-    WHERE wsia_mahasiswa_pt.xid_kls='" . $id_kelas . "' 
-    ORDER BY wsia_mahasiswa_pt.nipd ASC");
+    WHERE viewNilai.vid_kls='" . $id_kelas . "' ORDER BY wsia_mahasiswa_pt.nipd ASC");
 
 // Build table header
 $headerRow = "<tr>
@@ -113,36 +117,51 @@ $headerRow .= "</tr>";
 // Build student rows
 $studentRows = "";
 $no = 1;
-while ($mhs = mysqli_fetch_array($sqlMahasiswa)) {
-    $studentRows .= "<tr>
+if ($sqlMahasiswa)
+    while ($mhs = mysqli_fetch_array($sqlMahasiswa)) {
+        $nipd = $mhs['nipd'];
+        $studentRows .= "<tr>
         <td style='text-align:center;'>$no</td>
-        <td>" . $mhs['nipd'] . "</td>
+        <td>" . $nipd . "</td>
         <td>" . $mhs['nm_pd'] . "</td>";
 
-    $hadir = 0;
-    for ($i = 1; $i <= 16; $i++) {
-        if (isset($pertemuanData[$i])) {
-            $jurnalId = $pertemuanData[$i]['id_jurnal'];
-            if (isset($attendanceMap[$jurnalId][$mhs['nipd']])) {
-                $studentRows .= "<td style='text-align:center;'>&radic;</td>";
-                $hadir++;
+        $hadir = 0;
+        for ($i = 1; $i <= 16; $i++) {
+            if (isset($pertemuanData[$i])) {
+                $jurnalId = $pertemuanData[$i]['id_jurnal'];
+
+                // Flexible checking (string or int)
+                $isPresent = false;
+
+                if (isset($attendanceMap[$jurnalId][$nipd])) {
+                    $isPresent = true;
+                } else {
+                    $nipdInt = (string) intval($nipd);
+                    if (isset($attendanceMap[$jurnalId][$nipdInt])) {
+                        $isPresent = true;
+                    }
+                }
+
+                if ($isPresent) {
+                    $studentRows .= "<td style='text-align:center;'>&radic;</td>";
+                    $hadir++;
+                } else {
+                    $studentRows .= "<td style='text-align:center; color:red;'>X</td>";
+                }
             } else {
-                $studentRows .= "<td style='text-align:center; color:red;'>X</td>";
+                $studentRows .= "<td style='text-align:center;'>-</td>";
             }
-        } else {
-            $studentRows .= "<td style='text-align:center;'>-</td>";
         }
+
+        // Calculate percentage
+        $activePertemuan = count($pertemuanData);
+        $persen = $activePertemuan > 0 ? number_format(($hadir / $activePertemuan) * 100, 1) : 0;
+
+        $studentRows .= "<td style='text-align:center;'>$hadir/$activePertemuan</td>";
+        $studentRows .= "<td style='text-align:center;'>$persen%</td>";
+        $studentRows .= "</tr>";
+        $no++;
     }
-
-    // Calculate percentage
-    $activePertemuan = count($pertemuanData);
-    $persen = $activePertemuan > 0 ? number_format(($hadir / $activePertemuan) * 100, 1) : 0;
-
-    $studentRows .= "<td style='text-align:center;'>$hadir/$activePertemuan</td>";
-    $studentRows .= "<td style='text-align:center;'>$persen%</td>";
-    $studentRows .= "</tr>";
-    $no++;
-}
 
 $content = "<table width='100%' border='1' style='border:1px solid black; border-collapse:collapse; font-size:9pt;'>
     $headerRow
