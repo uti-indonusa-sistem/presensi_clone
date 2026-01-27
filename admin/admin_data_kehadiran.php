@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../koneksi.php';
-// Authentication check (keep existing admin check)
+// Authentication check 
 if (($_COOKIE['simpreskul_nik'] == '') AND ($_COOKIE['simpreskul_admin'] == '')) {
 	header("Location:login_dosen.html");
 }
@@ -8,13 +8,11 @@ if (($_COOKIE['simpreskul_nik'] == '') AND ($_COOKIE['simpreskul_admin'] == ''))
 // Debug helper
 $debug_enabled = 0;
 
-// Filters
+// Variables
 $id_kls_raw = $_GET['id_kelas'];
 $id_ptk_raw = $_GET['id_ptk'];
 $id_kls = str_replace("_yz_", "-", $id_kls_raw);
 $id_ptk = str_replace("_yz_", "-", $id_ptk_raw);
-$filter_prodi = isset($_GET['filter_prodi']) ? $_GET['filter_prodi'] : '';
-
 ?>
 
 <style>
@@ -66,17 +64,6 @@ $filter_prodi = isset($_GET['filter_prodi']) ? $_GET['filter_prodi'] : '';
 		}
 	}
 
-	function applyFilter() {
-		var prodi = document.getElementById('prodi_filter').value;
-		var url = new URL(window.location.href);
-		if (prodi) {
-			url.searchParams.set('filter_prodi', prodi);
-		} else {
-			url.searchParams.delete('filter_prodi');
-		}
-		window.location.href = url.toString();
-	}
-
 	// Clear form data on page load to prevent browser form restoration
 	window.addEventListener('load', function () {
 		var allInputs = document.querySelectorAll('input[type="checkbox"]');
@@ -86,38 +73,8 @@ $filter_prodi = isset($_GET['filter_prodi']) ? $_GET['filter_prodi'] : '';
 				allInputs[i].checked = false;
 			}
 		}
-
-		var form = document.getElementById('selectForm');
-		if (form) {
-			// form.reset(); // Be careful with reset if we have default checked values
-		}
 	});
 </script>
-
-<div style="margin-bottom: 20px; padding: 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px;">
-	<strong>Filter Program Studi:</strong>
-	<select id="prodi_filter" onchange="applyFilter()" style="padding: 5px; margin-left: 10px; min-width: 200px;">
-		<option value="">-- Semua Program Studi --</option>
-		<?php
-		// Populate Prodi dropdown based on students in this class
-		// Uses the same JOIN logic as the main query to ensure consistent data
-		$sqlProdi = "SELECT DISTINCT mp.xid_sms, sms.nm_lemb 
-                     FROM viewNilai vn
-                     JOIN wsia_mahasiswa_pt mp ON vn.xid_reg_pd = mp.xid_reg_pd
-                     JOIN wsia_sms sms ON mp.xid_sms = sms.xid_sms
-                     WHERE vn.vid_kls='$id_kls'
-                     ORDER BY sms.nm_lemb ASC";
-
-		$qProdi = mysqli_query($connection, $sqlProdi);
-		if ($qProdi) {
-			while ($rp = mysqli_fetch_array($qProdi)) {
-				$selected = ($filter_prodi == $rp['xid_sms']) ? 'selected' : '';
-				echo "<option value='" . $rp['xid_sms'] . "' $selected>" . $rp['nm_lemb'] . "</option>";
-			}
-		}
-		?>
-	</select>
-</div>
 
 <form action="admin_input_kehadiran-<?php echo $_GET['id_kelas'] ?>-<?php echo $_GET['id_ptk'] ?>.html" method="POST"
 	id="selectForm">
@@ -236,18 +193,11 @@ $filter_prodi = isset($_GET['filter_prodi']) ? $_GET['filter_prodi'] : '';
 		</thead>
 		<tbody>
 			<?php
-			// Query Students - Adapted from Dosen + Added Prodi Filter
-			$queryMhs = "SELECT viewNilai.*, wsia_mahasiswa_pt.*, wsia_mahasiswa.nm_pd 
-                 FROM viewNilai 
-                 RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
-                 LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
-                 WHERE viewNilai.vid_kls='$id_kls' ";
-
-			if ($filter_prodi != '') {
-				$queryMhs .= " AND wsia_mahasiswa_pt.xid_sms = '$filter_prodi' ";
-			}
-
-			$queryMhs .= " ORDER BY wsia_mahasiswa_pt.nipd ASC";
+			// Query Students - Exact Dosen Implementation without filters
+			$queryMhs = "SELECT viewNilai.*,wsia_mahasiswa_pt.*,wsia_mahasiswa.nm_pd FROM viewNilai 
+        RIGHT JOIN wsia_mahasiswa_pt ON viewNilai.xid_reg_pd=wsia_mahasiswa_pt.xid_reg_pd
+        LEFT JOIN wsia_mahasiswa ON wsia_mahasiswa_pt.id_pd=wsia_mahasiswa.xid_pd
+        WHERE viewNilai.vid_kls='$id_kls' ORDER BY wsia_mahasiswa_pt.nipd ASC";
 
 			$sql = mysqli_query($connection, $queryMhs);
 
