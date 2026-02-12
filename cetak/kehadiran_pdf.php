@@ -66,7 +66,7 @@ $title = "
 
 // Get all pertemuan (meetings)
 $sqlPertemuan = mysqli_query($connection, "SELECT * FROM presensi_jurnal_perkuliahan WHERE " . cek_gabungan($id_kelas) . "
-    AND id_ptk='" . $id_ptk . "' ORDER BY pertemuan_ke ASC");
+    AND id_ptk='" . $id_ptk . "' AND pertemuan_ke BETWEEN 1 AND 16 ORDER BY pertemuan_ke ASC");
 $jumlahPertemuan = mysqli_num_rows($sqlPertemuan);
 
 $pertemuanData = array();
@@ -111,7 +111,7 @@ for ($i = 1; $i <= 16; $i++) {
     $headerRow .= "<td style='text-align:center; font-weight:bold;' width='3%'>$i<br><small>$tgl</small></td>";
 }
 $headerRow .= "<td style='text-align:center; font-weight:bold;' width='5%'>Hadir</td>";
-$headerRow .= "<td style='text-align:center; font-weight:bold;' width='5%'>%</td>";
+$headerRow .= "<td style='text-align:center; font-weight:bold;' width='5%'>Presentase<br>%</td>";
 $headerRow .= "</tr>";
 
 // Build student rows
@@ -155,10 +155,10 @@ if ($sqlMahasiswa)
 
         // Calculate percentage
         $activePertemuan = count($pertemuanData);
-        $persen = $activePertemuan > 0 ? number_format(($hadir / $activePertemuan) * 100, 1) : 0;
+        $persen = $activePertemuan > 0 ? number_format(($hadir / $activePertemuan) * 100, 2) : 0;
 
         $studentRows .= "<td style='text-align:center;'>$hadir/$activePertemuan</td>";
-        $studentRows .= "<td style='text-align:center;'>$persen%</td>";
+        $studentRows .= "<td style='text-align:center;'>$persen</td>";
         $studentRows .= "</tr>";
         $no++;
     }
