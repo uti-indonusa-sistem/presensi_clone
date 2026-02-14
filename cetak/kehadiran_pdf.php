@@ -79,7 +79,7 @@ while ($p = mysqli_fetch_array($sqlPertemuan)) {
 // Load all attendance data in one query
 $attendanceMap = array(); // [id_jurnal][nim] = 1
 if (count($jurnalIds) > 0) {
-    $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . implode(",", $jurnalIds) . ")");
+    $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . implode(",", $jurnalIds) . ") AND id_ptk='" . $id_ptk . "'");
     while ($row = mysqli_fetch_array($sqlPresensi)) {
         $attendanceMap[$row['id_jurnal']][$row['nim']] = 1;
         // Also support int-like matching

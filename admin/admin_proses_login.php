@@ -9,8 +9,8 @@ $username = getSafePost('username');
 $password = getSafePost('password');
 
 if (empty($username) || empty($password)) {
-    header('Location: ' . $base_url . '/admin/login.php?error=missing');
-    exit;
+	header('Location: ' . $base_url . '/admin/login.php?error=missing');
+	exit;
 }
 
 // Rate limiting could be added here (per-IP)
@@ -26,15 +26,12 @@ if ($result && $result->num_rows === 1) {
 	$login_ok = false;
 
 	// If stored password is a bcrypt hash
-	if (password_needs_rehash($stored, PASSWORD_DEFAULT) || strpos($stored, '$2y$') === 0 || strpos($stored, '$2a$') === 0) {
-		if (password_verify($password, $stored)) {
-			$login_ok = true;
-		}
-	} else {
-		// Possibly legacy MD5 — check and rehash
-		if (hash_equals($stored, md5($password))) {
-			$login_ok = true;
-			// Re-hash password with bcrypt and store it
+	// Try modern password verify first (BCRYPT)
+	if (password_verify($password, $stored)) {
+		$login_ok = true;
+
+		// Rehash on login if needed (e.g. cost changed)
+		if (password_needs_rehash($stored, PASSWORD_DEFAULT)) {
 			$newHash = password_hash($password, PASSWORD_DEFAULT);
 			$updateQuery = "UPDATE presensi_pengguna SET password = ? WHERE id = ?";
 			$stmt = $connection->prepare($updateQuery);
@@ -45,10 +42,24 @@ if ($result && $result->num_rows === 1) {
 			}
 		}
 	}
+	// Fallback to MD5
+	elseif (md5($password) === $stored) {
+		$login_ok = true;
+
+		// Upgrade to bcrypt
+		$newHash = password_hash($password, PASSWORD_DEFAULT);
+		$updateQuery = "UPDATE presensi_pengguna SET password = ? WHERE id = ?";
+		$stmt = $connection->prepare($updateQuery);
+		if ($stmt) {
+			$stmt->bind_param('si', $newHash, $row['id']);
+			$stmt->execute();
+			$stmt->close();
+		}
+	}
 
 	if ($login_ok) {
 		// Successful login: set secure session + cookie
-		setAdminSession((int)$row['id'], $row['username']);
+		setAdminSession((int) $row['id'], $row['username']);
 		header('Location: ' . $base_url . '/admin.html');
 		exit;
 	}
