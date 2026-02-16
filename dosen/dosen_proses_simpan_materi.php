@@ -92,10 +92,25 @@ if (isset($_POST['lanjut'])) {
 	$nm_kls = $data['nm_kls'];
 	$nama_makul = isset($data['nm_mk']) ? $data['nm_mk'] : '';
 
-	// PREPARED STATEMENT - Check if jurnal exists
-	$query2 = "SELECT id_jurnal FROM presensi_jurnal_perkuliahan WHERE xid_kls = ? AND pertemuan_ke = ? AND id_ptk = ?";
-	$stmt2 = $connection->prepare($query2);
-	$stmt2->bind_param("sss", $id_kelas, $pertemuan_ke, $id_ptk);
+	// PREPARED STATEMENT - Check if jurnal exists (handle combined classes)
+	$cek_kls_sql = cek_gabungan($id_kelas);
+	if (empty($cek_kls_sql)) {
+		$query2 = "SELECT id_jurnal FROM presensi_jurnal_perkuliahan WHERE xid_kls = ? AND pertemuan_ke = ? AND id_ptk = ?";
+		$stmt2 = $connection->prepare($query2);
+		if (!$stmt2) {
+			error_log('Prepare failed: ' . $connection->error);
+			die('Database error');
+		}
+		$stmt2->bind_param("sss", $id_kelas, $pertemuan_ke, $id_ptk);
+	} else {
+		$query2 = "SELECT id_jurnal FROM presensi_jurnal_perkuliahan WHERE " . $cek_kls_sql . " AND pertemuan_ke = ? AND id_ptk = ?";
+		$stmt2 = $connection->prepare($query2);
+		if (!$stmt2) {
+			error_log('Prepare failed: ' . $connection->error);
+			die('Database error');
+		}
+		$stmt2->bind_param("ss", $pertemuan_ke, $id_ptk);
+	}
 	$stmt2->execute();
 	$result2 = $stmt2->get_result();
 

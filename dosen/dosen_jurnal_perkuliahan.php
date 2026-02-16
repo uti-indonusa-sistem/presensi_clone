@@ -77,7 +77,12 @@
 					if (!$dataKelas) {
 						echo "Data kelas tidak ditemukan";
 					} else {
-						$sqlJurnal = mysqli_query($connection, "SELECT*FROM presensi_jurnal_perkuliahan WHERE xid_kls='" . $id_kelas . "' AND id_ptk='" . $dataKelas['id_ptk'] . "' AND pertemuan_ke='" . $i . "'");
+						$cek_kls = cek_gabungan($id_kelas);
+						if (empty($cek_kls)) {
+							$cek_kls = "presensi_jurnal_perkuliahan.xid_kls='" . $id_kelas . "'";
+						}
+
+						$sqlJurnal = mysqli_query($connection, "SELECT*FROM presensi_jurnal_perkuliahan WHERE " . $cek_kls . " AND id_ptk='" . $dataKelas['id_ptk'] . "' AND pertemuan_ke='" . $i . "'");
 						$dataJurnal = null;
 						if ($sqlJurnal && is_object($sqlJurnal)) {
 							$dataJurnal = mysqli_fetch_array($sqlJurnal);
