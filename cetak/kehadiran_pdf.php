@@ -97,12 +97,24 @@ if (!empty($allJurnalIds) && $allJurnalIds[0] != 0) {
     if ($sqlPresensi) while ($row = mysqli_fetch_array($sqlPresensi)) {
         $nimRaw = trim((string)$row['nim']);
         $jid    = trim((string)$row['id_jurnal']);
+        
+        // Store by raw JID
         $attendanceMap[$jid][$nimRaw] = true;
-        // Also support int-like matching
+        // Also store by int-normalized JID to handle '01' vs '1' mismatch
+        $jidInt = (string) intval($jid);
+        if ($jidInt !== $jid) {
+            $attendanceMap[$jidInt][$nimRaw] = true;
+        }
+
+        // Also support int-like matching for NIM
         $nimInt = (string) intval($nimRaw);
         if ($nimInt !== $nimRaw) {
             $attendanceMap[$jid][$nimInt] = true;
+            if ($jidInt !== $jid) {
+                $attendanceMap[$jidInt][$nimInt] = true;
+            }
         }
+        
         // Accumulate per-student present count (same as web view)
         if (!isset($presentCount[$nimRaw])) $presentCount[$nimRaw] = 0;
         $presentCount[$nimRaw]++;
@@ -150,14 +162,25 @@ if ($sqlMahasiswa)
         for ($i = 1; $i <= 16; $i++) {
             $idj = isset($pertemuanJournals[$i]) ? $pertemuanJournals[$i] : '';
             if ($idj != '') {
-                // Flexible checking (string or int) — same logic as web view
+                // Flexible checking (string or int) for BOTH Journal ID and Student ID/NIM
                 $isPresent = false;
-                if (isset($attendanceMap[$idj][$nipdKey])) {
-                    $isPresent = true;
-                } else {
-                    $nipdInt = (string) intval($nipdKey);
-                    if (isset($attendanceMap[$idj][$nipdInt])) {
-                        $isPresent = true;
+                
+                // Check raw JID
+                if (isset($attendanceMap[$idj][$nipdKey])) $isPresent = true;
+                else {
+                     $nipdInt = (string) intval($nipdKey);
+                     if (isset($attendanceMap[$idj][$nipdInt])) $isPresent = true;
+                }
+                
+                // Check int-normalized JID (if raw failed)
+                if (!$isPresent) {
+                    $idjInt = (string) intval($idj);
+                    if ($idjInt !== $idj) {
+                        if (isset($attendanceMap[$idjInt][$nipdKey])) $isPresent = true;
+                        else {
+                             $nipdInt = (string) intval($nipdKey);
+                             if (isset($attendanceMap[$idjInt][$nipdInt])) $isPresent = true;
+                        }
                     }
                 }
 
