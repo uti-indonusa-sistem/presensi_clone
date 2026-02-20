@@ -101,8 +101,7 @@ if (!empty($allJurnalIds) && $allJurnalIds[0] != 0) {
         // Store by raw JID
         $attendanceMap[$jid][$nimRaw] = true;
         
-        // Safely normalize numeric JID (handle '01' vs '1' mismatch) without breaking non-numeric/long IDs
-        // Only normalize if purely numeric and length is safe (standard int/bigint range)
+        // Safely normalize numeric JID (handle '01' vs '1' mismatch)
         if (preg_match('/^[0-9]+$/', $jid) && strlen($jid) < 19) {
             $jidInt = (string) intval($jid);
             if ($jidInt !== $jid) {
@@ -110,13 +109,15 @@ if (!empty($allJurnalIds) && $allJurnalIds[0] != 0) {
             }
         }
 
-        // Also support int-like matching for NIM
-        $nimInt = (string) intval($nimRaw);
-        if ($nimInt !== $nimRaw) {
-            $attendanceMap[$jid][$nimInt] = true;
-            // Also store under normalized JID if applicable
-            if (isset($jidInt) && $jidInt !== $jid) {
-                $attendanceMap[$jidInt][$nimInt] = true;
+        // Also support int-like matching for NIM (handle '0123' vs '123')
+        // CRITICAL FIX: Only if NIM is purely numeric! 'D123' -> 0 causes collisions.
+        if (preg_match('/^[0-9]+$/', $nimRaw)) {
+            $nimInt = (string) intval($nimRaw);
+            if ($nimInt !== $nimRaw) {
+                $attendanceMap[$jid][$nimInt] = true;
+                if (isset($jidInt) && $jidInt !== $jid) {
+                    $attendanceMap[$jidInt][$nimInt] = true;
+                }
             }
         }
         
@@ -167,24 +168,28 @@ if ($sqlMahasiswa)
         for ($i = 1; $i <= 16; $i++) {
             $idj = isset($pertemuanJournals[$i]) ? $pertemuanJournals[$i] : '';
             if ($idj != '') {
-                // Flexible checking (string or int) for BOTH Journal ID and Student ID/NIM
+                // Flexible checking for BOTH Journal ID and Student ID/NIM
                 $isPresent = false;
                 
-                // Check raw JID
+                // 1. Check strict (all raw)
                 if (isset($attendanceMap[$idj][$nipdKey])) $isPresent = true;
-                else {
+                
+                // 2. Check normalized NIM (if NIM is numeric)
+                if (!$isPresent && preg_match('/^[0-9]+$/', $nipdKey)) {
                      $nipdInt = (string) intval($nipdKey);
                      if (isset($attendanceMap[$idj][$nipdInt])) $isPresent = true;
                 }
                 
-                // Check int-normalized JID (if raw failed), but ONLY if safe/numeric
+                // 3. Check normalized JID (if JID is numeric/safe)
                 if (!$isPresent && preg_match('/^[0-9]+$/', $idj) && strlen($idj) < 19) {
                     $idjInt = (string) intval($idj);
                     if ($idjInt !== $idj) {
+                        // Check with raw NIM
                         if (isset($attendanceMap[$idjInt][$nipdKey])) $isPresent = true;
-                        else {
-                             $nipdInt = (string) intval($nipdKey);
-                             if (isset($attendanceMap[$idjInt][$nipdInt])) $isPresent = true;
+                        // Check with normalized NIM (if numeric)
+                        elseif (preg_match('/^[0-9]+$/', $nipdKey)) {
+                            $nipdInt = (string) intval($nipdKey);
+                            if (isset($attendanceMap[$idjInt][$nipdInt])) $isPresent = true;
                         }
                     }
                 }
