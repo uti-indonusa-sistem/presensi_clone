@@ -15,9 +15,11 @@ $mpdf->AddPage("L", "", "", "", "", "15", "15", "15", "15", "", "", "", "", "", 
 
 include_once "function.php";
 
-// Get parameters
-$id_kelas = isset($_GET['id_kelas']) ? str_replace("_yz_", "-", $_GET['id_kelas']) : '';
-$id_ptk = isset($_GET['id_ptk']) ? str_replace("_yz_", "-", $_GET['id_ptk']) : '';
+// Get parameters - keep raw GET values for cek_gabungan (which does its own _yz_ replacement)
+$id_kelas_raw = isset($_GET['id_kelas']) ? $_GET['id_kelas'] : '';
+$id_kelas = str_replace("_yz_", "-", $id_kelas_raw);
+$id_ptk_raw = isset($_GET['id_ptk']) ? $_GET['id_ptk'] : '';
+$id_ptk = str_replace("_yz_", "-", $id_ptk_raw);
 
 if (empty($id_kelas)) {
     die("Error: Parameter id_kelas tidak ditemukan.");
@@ -64,24 +66,35 @@ $title = "
 </table><br>
 ";
 
-// Get all pertemuan (meetings)
-$sqlPertemuan = mysqli_query($connection, "SELECT * FROM presensi_jurnal_perkuliahan WHERE " . cek_gabungan($id_kelas) . "
+// Get all pertemuan (meetings) - use raw id_kelas for cek_gabungan (it does its own _yz_ replacement)
+$cek_kls = cek_gabungan($id_kelas_raw);
+if (empty($cek_kls)) {
+    $cek_kls = "presensi_jurnal_perkuliahan.xid_kls='" . $id_kelas . "'";
+}
+$sqlPertemuan = mysqli_query($connection, "SELECT * FROM presensi_jurnal_perkuliahan WHERE (" . $cek_kls . ")
     AND id_ptk='" . $id_ptk . "' AND pertemuan_ke BETWEEN 1 AND 16 ORDER BY pertemuan_ke ASC");
 $jumlahPertemuan = mysqli_num_rows($sqlPertemuan);
 
 $pertemuanData = array();
-$jurnalIds = array();
+$pertemuanJournals = array();
 while ($p = mysqli_fetch_array($sqlPertemuan)) {
-    $pertemuanData[$p['pertemuan_ke']] = $p;
-    $jurnalIds[] = "'" . $p['id_jurnal'] . "'";
+    $k = (int)$p['pertemuan_ke'];
+    $pertemuanData[$k] = $p;
+    $pertemuanJournals[$k] = trim((string)$p['id_jurnal']);
 }
 
-// Load all attendance data in one query (filter by id_ptk to match web view)
+// Load all attendance data - same approach as dosen_data_kehadiran.php
+$allJurnalIds = array_values($pertemuanJournals);
+if (empty($allJurnalIds)) {
+    $allJurnalIds = array(0);
+}
+$idsList = implode(',', array_map('intval', $allJurnalIds));
+
 $attendanceMap = array(); // [id_jurnal][nim] = true
 $presentCount  = array(); // [nim] = total meetings attended
-if (count($jurnalIds) > 0) {
-    $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . implode(",", $jurnalIds) . ") AND id_ptk='" . $id_ptk . "'");
-    while ($row = mysqli_fetch_array($sqlPresensi)) {
+if (!empty($allJurnalIds) && $allJurnalIds[0] != 0) {
+    $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . $idsList . ") AND id_ptk='" . $id_ptk . "'");
+    if ($sqlPresensi) while ($row = mysqli_fetch_array($sqlPresensi)) {
         $nimRaw = trim((string)$row['nim']);
         $jid    = trim((string)$row['id_jurnal']);
         $attendanceMap[$jid][$nimRaw] = true;
@@ -95,6 +108,7 @@ if (count($jurnalIds) > 0) {
         $presentCount[$nimRaw]++;
     }
 }
+$jumlahAllPertemuan = count(array_filter($pertemuanJournals));
 
 // Get Students - Strict Dosen Logic (viewNilai + RIGHT JOIN)
 // This ensures the PDF matches the screen exactly
@@ -134,16 +148,15 @@ if ($sqlMahasiswa)
         $nipdKey = trim((string)$nipd);
         $hadir = 0;
         for ($i = 1; $i <= 16; $i++) {
-            if (isset($pertemuanData[$i])) {
-                $jurnalId = trim((string)$pertemuanData[$i]['id_jurnal']);
-
+            $idj = isset($pertemuanJournals[$i]) ? $pertemuanJournals[$i] : '';
+            if ($idj != '') {
                 // Flexible checking (string or int) — same logic as web view
                 $isPresent = false;
-                if (isset($attendanceMap[$jurnalId][$nipdKey])) {
+                if (isset($attendanceMap[$idj][$nipdKey])) {
                     $isPresent = true;
                 } else {
                     $nipdInt = (string) intval($nipdKey);
-                    if (isset($attendanceMap[$jurnalId][$nipdInt])) {
+                    if (isset($attendanceMap[$idj][$nipdInt])) {
                         $isPresent = true;
                     }
                 }
