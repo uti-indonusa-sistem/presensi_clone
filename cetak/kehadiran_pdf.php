@@ -76,17 +76,23 @@ while ($p = mysqli_fetch_array($sqlPertemuan)) {
     $jurnalIds[] = "'" . $p['id_jurnal'] . "'";
 }
 
-// Load all attendance data in one query
-$attendanceMap = array(); // [id_jurnal][nim] = 1
+// Load all attendance data in one query (filter by id_ptk to match web view)
+$attendanceMap = array(); // [id_jurnal][nim] = true
+$presentCount  = array(); // [nim] = total meetings attended
 if (count($jurnalIds) > 0) {
     $sqlPresensi = mysqli_query($connection, "SELECT nim, id_jurnal FROM presensi_rekap WHERE id_jurnal IN (" . implode(",", $jurnalIds) . ") AND id_ptk='" . $id_ptk . "'");
     while ($row = mysqli_fetch_array($sqlPresensi)) {
-        $attendanceMap[$row['id_jurnal']][$row['nim']] = 1;
+        $nimRaw = trim((string)$row['nim']);
+        $jid    = trim((string)$row['id_jurnal']);
+        $attendanceMap[$jid][$nimRaw] = true;
         // Also support int-like matching
-        $nimInt = (string) intval($row['nim']);
-        if ($nimInt !== $row['nim']) {
-            $attendanceMap[$row['id_jurnal']][$nimInt] = 1;
+        $nimInt = (string) intval($nimRaw);
+        if ($nimInt !== $nimRaw) {
+            $attendanceMap[$jid][$nimInt] = true;
         }
+        // Accumulate per-student present count (same as web view)
+        if (!isset($presentCount[$nimRaw])) $presentCount[$nimRaw] = 0;
+        $presentCount[$nimRaw]++;
     }
 }
 
@@ -125,18 +131,18 @@ if ($sqlMahasiswa)
         <td>" . $nipd . "</td>
         <td>" . $mhs['nm_pd'] . "</td>";
 
+        $nipdKey = trim((string)$nipd);
         $hadir = 0;
         for ($i = 1; $i <= 16; $i++) {
             if (isset($pertemuanData[$i])) {
-                $jurnalId = $pertemuanData[$i]['id_jurnal'];
+                $jurnalId = trim((string)$pertemuanData[$i]['id_jurnal']);
 
-                // Flexible checking (string or int)
+                // Flexible checking (string or int) — same logic as web view
                 $isPresent = false;
-
-                if (isset($attendanceMap[$jurnalId][$nipd])) {
+                if (isset($attendanceMap[$jurnalId][$nipdKey])) {
                     $isPresent = true;
                 } else {
-                    $nipdInt = (string) intval($nipd);
+                    $nipdInt = (string) intval($nipdKey);
                     if (isset($attendanceMap[$jurnalId][$nipdInt])) {
                         $isPresent = true;
                     }
@@ -153,12 +159,19 @@ if ($sqlMahasiswa)
             }
         }
 
-        // Calculate percentage
+        // Calculate percentage using presentCount (same as web view)
         $activePertemuan = count($pertemuanData);
-        $persen = $activePertemuan > 0 ? number_format(($hadir / $activePertemuan) * 100, 2) : 0;
+        $cnt = 0;
+        if (isset($presentCount[$nipdKey])) {
+            $cnt = $presentCount[$nipdKey];
+        } else {
+            $nipdInt = (string) intval($nipdKey);
+            if (isset($presentCount[$nipdInt])) $cnt = $presentCount[$nipdInt];
+        }
+        $persen = $activePertemuan > 0 ? number_format(($cnt / $activePertemuan) * 100, 2) : 0;
 
-        $studentRows .= "<td style='text-align:center;'>$hadir/$activePertemuan</td>";
-        $studentRows .= "<td style='text-align:center;'>$persen</td>";
+        $studentRows .= "<td style='text-align:center;'>$cnt/$activePertemuan</td>";
+        $studentRows .= "<td style='text-align:center;'>$persen%</td>";
         $studentRows .= "</tr>";
         $no++;
     }
