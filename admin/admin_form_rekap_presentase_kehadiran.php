@@ -12,7 +12,8 @@ requireAdmin();
 					</b></td>
 				<td style="width:25%;">
 					<font style="font-size:10pt;">
-						<select name="prodi" class="form-control">
+						<select name="prodi" class="form-control" required>
+							<option value=""></option>
 							<?php
 							$sqlProdi = mysqli_query($connection, "SELECT xid_sms, nm_lemb FROM wsia_sms ORDER BY xid_sms DESC");
 							while ($dataProdi = mysqli_fetch_array($sqlProdi)) {
@@ -28,6 +29,18 @@ requireAdmin();
 				</td>
 				<td style="width:12%;">
 					<font style="font-size:10pt;">
+						<font style="font-size:10pt;"><b>Periode</b>
+				</td>
+				<td style="width:25%;">
+					<input type="date" name="awal" class="form-control" style="width:200px;margin-bottom:10px"
+						required></input>
+					<input type="date" name="akhir" class="form-control" style="width:200px;10px" required></input>
+				</td>
+
+			</tr>
+			<tr>
+				<td style="width:12%;">
+					<font style="font-size:10pt;">
 						<font style="font-size:10pt;"><b>Tahun Akademik</b>
 				</td>
 				<td style="width:25%;">
@@ -41,13 +54,8 @@ requireAdmin();
 					</select>
 
 				</td>
-
-			</tr>
-			<tr>
-				<td colspan="2"></td>
-
-
-				<td colspan="2">
+				<td></td>
+				<td colspan="1">
 					<font style="font-size:10pt;"><input type="submit" value="Cari" class="btn btn-default">
 				</td>
 
