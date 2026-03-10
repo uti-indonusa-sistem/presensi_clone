@@ -36,6 +36,17 @@
 
 
 
+<form id="bulk_jurnal_form" action="dosen_proses_simpan_materi_bulk-<?php echo str_replace("-", "_yz_", $id_kelas); ?>-<?php echo str_replace("-", "_yz_", $id_ptk); ?>.html" method="POST">
+	<input type="hidden" name="id_kelas" value="<?php echo str_replace("-", "_yz_", $id_kelas); ?>">
+	<input type="hidden" name="id_ptk" value="<?php echo str_replace("-", "_yz_", $id_ptk); ?>">
+</form>
+
+<div style="margin-bottom: 15px; text-align: right;">
+	<button form="bulk_jurnal_form" type="submit" class="btn btn-primary" style="font-weight: bold;">
+		<i class="fa fa-save"></i> SIMPAN SEMUA JURNAL
+	</button>
+</div>
+
 <table class="table table-striped table-bordered table-hover" id="dataTables-example">
 	<tr valign="top">
 		<td width="5%">
@@ -99,34 +110,30 @@
 						}
 						?>
 
-						<form id="form_materi_<?php echo $i; ?>"
-							action="dosen_proses_simpan_materi-<?php echo str_replace("-", "_yz_", $id_kelas); ?>-<?php echo str_replace("-", "_yz_", $id_ptk); ?>-<?php echo $i; ?>-<?php echo $idJurnal; ?>.html"
-							method="POST"></form>
-
-						<input form="form_materi_<?php echo $i; ?>" type="radio" required name="kegiatan" <?php echo $statusdisabled; ?> value="1" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '1') {
+						<input form="bulk_jurnal_form" type="radio" name="kegiatan[<?php echo $i; ?>]" <?php echo $statusdisabled; ?> value="1" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '1') {
 								   echo "checked";
 							   } ?>>
 						Perkuliahan &nbsp </input>
-						<input form="form_materi_<?php echo $i; ?>" type="radio" required name="kegiatan" <?php echo $statusdisabled; ?> value="2" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '2') {
+						<input form="bulk_jurnal_form" type="radio" name="kegiatan[<?php echo $i; ?>]" <?php echo $statusdisabled; ?> value="2" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '2') {
 								   echo "checked";
 							   } ?>>
 						UTS &nbsp </input>
-						<input form="form_materi_<?php echo $i; ?>" type="radio" required name="kegiatan" <?php echo $statusdisabled; ?> value="3" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '3') {
+						<input form="bulk_jurnal_form" type="radio" name="kegiatan[<?php echo $i; ?>]" <?php echo $statusdisabled; ?> value="3" <?php if ($dataJurnal && $dataJurnal['kegiatan'] == '3') {
 								   echo "checked";
 							   } ?>>
 						UAS &nbsp </input>
 
-						<textarea form="form_materi_<?php echo $i; ?>" class="form-control" name="materi" required
+						<textarea form="bulk_jurnal_form" class="form-control" name="materi[<?php echo $i; ?>]" 
 							style="width:400px; height:40px" <?php echo $statusdisabled; ?>><?php echo ($dataJurnal ? $dataJurnal["materi"] : ""); ?></textarea>
 					</td>
 
 					<td>
-						<input form="form_materi_<?php echo $i; ?>" type="date" name="tanggal" required
+						<input form="bulk_jurnal_form" type="date" name="tanggal[<?php echo $i; ?>]" 
 							value="<?php echo ($dataJurnal ? $dataJurnal['tanggal'] : ''); ?>" class="form-control"
 							style="width:160px;" <?php echo $statusdisabled; ?>></input>
 					</td>
 					<td>
-						<select form="form_materi_<?php echo $i; ?>" name="ruang" required class="form-control" style="width:160px;"
+						<select form="bulk_jurnal_form" name="ruang[<?php echo $i; ?>]" class="form-control" style="width:160px;"
 							<?php echo $statusdisabled; ?>>
 							<option value="<?php echo ($dataJurnal ? $dataJurnal['ruang'] : ''); ?>">
 								<?php echo ($dataJurnal ? $dataJurnal['ruang'] : ''); ?></option>
@@ -140,18 +147,16 @@
 					</td>
 
 					<td>
-						<?php if ($dataJurnal && $dataJurnal['id_jurnal'] != '') { ?>
-							<input form="form_materi_<?php echo $i; ?>" type="submit" class="btn btn-warning" value="Simpan"
-								name="lanjut" <?php echo $statusdisabled; ?>>
+						<?php if ($statusdisabled != "disabled") { ?>
+							<span class="text-success"><i class="fa fa-edit"></i> Siap simpan</span>
 						<?php } else { ?>
-							<input form="form_materi_<?php echo $i; ?>" type="submit" class="btn btn-warning" value="Simpan"
-								name="lanjut">
+							<span class="text-muted"><i class="fa fa-lock"></i> Terkunci</span>
 						<?php } ?>
 					</td>
 					<td>
 						<?php if ($dataJurnal && $dataJurnal['id_jurnal'] != '') { ?>
-							<input form="form_materi_<?php echo $i; ?>" type="submit" class="btn btn-danger" value="Hapus" name="hapus"
-								<?php echo $statusdisabled; ?>>
+							<a href="dosen_hapus_jurnal-<?php echo $dataJurnal['id_jurnal']; ?>-<?php echo str_replace("-", "_yz_", $id_kelas); ?>-<?php echo str_replace("-", "_yz_", $id_ptk); ?>.html" 
+							   class="btn btn-danger btn-xs" <?php echo ($statusdisabled == 'disabled' ? 'style="display:none;"' : ''); ?> onclick="return confirm('Hapus jurnal ini?')">Hapus</a>
 						<?php } ?>
 					</td>
 					<?php
@@ -163,3 +168,9 @@
 	<?php } ?>
 
 </table>
+
+<div style="margin-top: 20px; margin-bottom: 40px; text-align: center;">
+	<button form="bulk_jurnal_form" type="submit" class="btn btn-primary btn-lg" style="padding: 10px 40px; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+		<i class="fa fa-save"></i> SIMPAN SEMUA JURNAL PERKULIAHAN
+	</button>
+</div>

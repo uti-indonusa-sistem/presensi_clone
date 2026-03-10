@@ -80,6 +80,7 @@ RewriteRule ^dosen_input_kehadiran2-(.*)-(.*)\.html$ dosen.php?module=dosen_inpu
 RewriteRule ^dosen_data_kehadiran-(.*)-(.*)\.html$ dosen.php?module=dosen_data_kehadiran&id_kelas=$1&id_ptk=$2 [L]
 RewriteRule ^dosen_jurnal_perkuliahan-(.*)-(.*)\.html$ dosen.php?module=dosen_jurnal_perkuliahan&id_kelas=$1&id_ptk=$2 [L]
 RewriteRule ^dosen_proses_simpan_materi-(.*)-(.*)-(.*)-(.*)\.html$ dosen.php?module=dosen_proses_simpan_materi&id_kelas=$1&id_ptk=$2&pertemuan_ke=$3&id_jurnal=$4 [L]
+RewriteRule ^dosen_proses_simpan_materi_bulk-(.*)-(.*)\.html$ dosen.php?module=dosen_proses_simpan_materi_bulk&id_kelas=$1&id_ptk=$2 [L]
 RewriteRule ^dosen_hapus_jurnal-(.*)-(.*)-(.*)\.html$ dosen.php?module=dosen_hapus_jurnal&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
 RewriteRule ^admin_hapus_jurnal-(.*)-(.*)-(.*)\.html$ admin.php?module=admin_hapus_jurnal&id_jurnal=$1&id_kelas=$2&id_ptk=$3 [L]
 
