@@ -12,10 +12,10 @@ if (empty(getSafeCookie('simpreskul_nik'))) {
 }
 
 // Get safe parameters
-$id_kelas = str_replace("_yz_", "-", $_POST['id_kelas'] ?? '');
-$id_ptk = str_replace("_yz_", "-", $_POST['id_ptk'] ?? '');
+$id_kelas = str_replace("_yz_", "-", $_POST['id_kelas'] ?? $_GET['id_kelas'] ?? '');
+$id_ptk = str_replace("_yz_", "-", $_POST['id_ptk'] ?? $_GET['id_ptk'] ?? '');
 
-// Fallback to cookie if id_ptk not in POST
+// Fallback to cookie if id_ptk not in POST or GET
 if (empty($id_ptk)) {
     $id_ptk = getSafeCookie('simpreskul_id_ptk', '');
 }

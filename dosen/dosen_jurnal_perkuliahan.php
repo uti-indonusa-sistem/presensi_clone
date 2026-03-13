@@ -1,6 +1,12 @@
-<?php if ($_COOKIE['simpreskul_nik'] == '') {
+<?php 
+if ($_COOKIE['simpreskul_nik'] == '') {
 	header("Location:login_dosen.html");
-} ?>
+	exit;
+} 
+
+$id_kelas = isset($_GET['id_kelas']) ? str_replace("_yz_", "-", $_GET['id_kelas']) : '';
+$id_ptk = isset($_GET['id_ptk']) ? str_replace("_yz_", "-", $_GET['id_ptk']) : '';
+?>
 <div style="float:left; width:100%;">
 	<table class="table table-striped table-bordered table-hover" id="dataTables-example" style="width:100%;">
 		<tr>
@@ -76,9 +82,6 @@
 
 			<td>
 				<?php
-				$id_kelas = isset($_GET['id_kelas']) ? str_replace("_yz_", "-", $_GET['id_kelas']) : '';
-				$id_ptk = isset($_GET['id_ptk']) ? str_replace("_yz_", "-", $_GET['id_ptk']) : '';
-
 				if (empty($id_kelas) || empty($id_ptk)) {
 					echo "Kelas atau PTK tidak ditemukan";
 				} else {
